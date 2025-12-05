@@ -12,7 +12,7 @@ app.use(express.json());
 // OpenRouter API configuration
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY; // apenas via env
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = process.env.MODEL || 'x-ai/grok-4.1-fast:free'; // permite trocar via env
+const MODEL = process.env.MODEL || 'qwen/qwen-2.5-72b-instruct';
 
 if (!OPENROUTER_API_KEY) {
   console.warn('⚠️ OPENROUTER_API_KEY não está definida. As chamadas à IA irão falhar.');
