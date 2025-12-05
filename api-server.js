@@ -8,6 +8,19 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Middleware simples de log de performance
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(
+      `⏱ ${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`
+    );
+  });
+
+  next();
+});
 
 // OpenRouter API configuration
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY; // apenas via env
