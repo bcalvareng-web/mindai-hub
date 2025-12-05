@@ -2,16 +2,21 @@ import express from 'express';
 import cors from 'cors';
 
 const app = express();
-const PORT = 3001;
+// Usa a porta do ambiente (Render) ou 3001 local
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // OpenRouter API configuration
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY; // apenas via env
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'x-ai/grok-4.1-fast:free'; // Grok 4.1 Fast (free tier) via OpenRouter
+const MODEL = process.env.MODEL || 'x-ai/grok-4.1-fast:free'; // permite trocar via env
+
+if (!OPENROUTER_API_KEY) {
+  console.warn('⚠️ OPENROUTER_API_KEY não está definida. As chamadas à IA irão falhar.');
+}
 
 // Simple in-memory license store
 const licenses = new Map();
@@ -33,7 +38,7 @@ licenses.set('MINDAI-BETA-2024-DEMO2', {
   last_used: null
 });
 
-// Helper function to call OpenRouter API
+// Helper function to call OpenRouter API (versão com logs detalhados)
 async function callOpenRouter(systemPrompt, userPrompt) {
   try {
     const response = await fetch(OPENROUTER_URL, {
@@ -55,13 +60,35 @@ async function callOpenRouter(systemPrompt, userPrompt) {
       })
     });
 
-    const data = await response.json();
-    
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      return data.choices[0].message.content;
+    const text = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('❌ OpenRouter retornou resposta não-JSON:', text);
+      throw new Error('OpenRouter returned non-JSON response');
     }
-    
-    throw new Error('Invalid API response');
+
+    // Se a API respondeu com erro HTTP (401, 403, 429 etc)
+    if (!response.ok) {
+      console.error('❌ OpenRouter HTTP error:', response.status, data);
+      throw new Error(
+        `OpenRouter HTTP ${response.status}: ${
+          data.error?.message || JSON.stringify(data)
+        }`
+      );
+    }
+
+    const message = data?.choices?.[0]?.message?.content;
+
+    if (!message) {
+      console.error('❌ Estrutura inesperada na resposta do OpenRouter:', data);
+      throw new Error('Invalid API response structure');
+    }
+
+    return message;
+
   } catch (error) {
     console.error('OpenRouter API error:', error);
     throw error;
@@ -419,3 +446,4 @@ app.listen(PORT, () => {
   console.log(`   - MINDAI-BETA-2024-DEMO1`);
   console.log(`   - MINDAI-BETA-2024-DEMO2`);
 });
+
