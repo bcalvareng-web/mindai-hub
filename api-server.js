@@ -441,7 +441,7 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 MindAI Hub API Server running on http://localhost:${PORT}`);
-  console.log(`🤖 Using Grok model: ${MODEL}`);
+  console.log(`🤖 Using AI model: ${MODEL}`);
   console.log(`📋 Demo licenses:`);
   console.log(`   - MINDAI-BETA-2024-DEMO1`);
   console.log(`   - MINDAI-BETA-2024-DEMO2`);
